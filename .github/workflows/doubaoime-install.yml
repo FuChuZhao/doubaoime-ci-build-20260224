@@ -53,8 +53,8 @@ jobs:
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: doubaoime-install-artifacts
           path: source/artifacts
           retention-days: 1
-
