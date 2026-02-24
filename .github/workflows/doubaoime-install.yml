@@ -1,0 +1,60 @@
+name: doubaoime-install
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: "Git ref (branch/tag/sha) in SOURCE_REPO"
+        required: true
+        default: "main"
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    runs-on: macos-14
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout BUILD_REPO
+        uses: actions/checkout@v4
+
+      - name: Start ssh-agent (SOURCE_REPO deploy key)
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SOURCE_REPO_SSH_KEY }}
+
+      - name: Add github.com to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Clone SOURCE_REPO
+        run: |
+          git clone --depth 1 --branch "${{ inputs.source_ref }}" git@github.com:FuChuZhao/doubaoime-ci-source-20260224.git source
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Run install test
+        env:
+          AVD_NAME: doubao_arm64_${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          cd source
+          bash tool/ci/run.sh --avd-name "${AVD_NAME}" --artifact-dir artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: doubaoime-install-artifacts
+          path: source/artifacts
+          retention-days: 1
+
