@@ -45,7 +45,7 @@ jobs:
             libxrandr2 \
             libxrender1 \
             libxtst6 \
-            libasound2 \
+            libasound2t64 \
             libdbus-1-3 \
             libdrm2 \
             libgbm1 \
